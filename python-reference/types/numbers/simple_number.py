@@ -1,0 +1,13 @@
+print(5);
+print("\n");
+print(3.3);
+print("\n");
+print(5 + 5);
+print("\n");
+print(20 + 5.6);
+print("\n");
+print(8 - 3);
+print("\n");
+print(2 - 7);
+print("\n");
+print(2.2 - 3.3);
