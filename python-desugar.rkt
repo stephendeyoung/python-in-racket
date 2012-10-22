@@ -9,4 +9,6 @@
     [PyNum (n) (CNum n)]
     [PyStr (s) (CStr s)]
     [PyApp (f args) (CApp (desugar f) (map desugar args))]
-    [PyId (x) (CId x)]))
+    [PyId (x) (CId x)]
+    [PyPrimP (l o r) (desugar l)]
+    [else (error 'desugar "no case yet")]))

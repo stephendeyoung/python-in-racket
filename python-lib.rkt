@@ -25,6 +25,10 @@ that calls the primitive `print`.
 (define true-val
   (CTrue))
 
+(define type-lambda
+  (CFunc (list 'check-type)
+         (CPrim1 'type (CId 'check-type))))
+
 (define-type LibBinding
   [bind (left : symbol) (right : CExp)])
 
@@ -32,6 +36,7 @@ that calls the primitive `print`.
   (list (bind 'print print-lambda)
         (bind 'True true-val)
         (bind '___assertTrue assert-true-lambda)
+        (bind 'type type-lambda)
 
 ))
 

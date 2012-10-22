@@ -27,5 +27,10 @@ primitives here.
 
 (define (python-prim1 op arg)
   (case op
-    [(print) (begin (print arg) arg)]))
+    [(print) (begin (print arg) arg)]
+    [(type) (cond
+              [(VNum? arg) (VStr "number")]
+              [(VStr? arg) (VStr "string")]
+              [(VTrue? arg) (VStr "true")]
+              [(VClosure? arg) (VStr "function")])]))
 

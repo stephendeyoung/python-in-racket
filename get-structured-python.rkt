@@ -37,7 +37,10 @@ structure that you define in python-syntax.rkt
                  ('right right-expr))
      (PyPrimP (get-structured-python left-expr)
               (get-structured-python operation)
-              (get-structured-python right-expr))]                 
+              (get-structured-python right-expr))]   
+    [(hash-table ('type "Add"))
+     '+]
+                  
     [(hash-table ('type "Call")
                  ('keywords keywords) ;; ignoring keywords for now
                  ('kwargs kwargs)     ;; ignoring kwargs for now

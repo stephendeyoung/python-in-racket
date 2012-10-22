@@ -34,7 +34,8 @@
 
     [CFunc (args body) (VClosure env args body)] 
 
-    [CPrim1 (prim arg) (python-prim1 prim (interp-env arg env))]))
+    [CPrim1 (prim arg) (python-prim1 prim (interp-env arg env))]
+    [else (error 'interp "no case yet")]))
 
 (define (bind-args args vals env)
   (cond [(and (empty? args) (empty? vals)) env]
