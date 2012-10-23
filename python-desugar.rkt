@@ -5,7 +5,7 @@
 
 (define (desugar expr)
   (type-case PyExpr expr
-    [PySeq (es) (foldr (lambda (e1 e2) (CSeq e2 (desugar e1))) (desugar (first es)) (rest es))]
+    [PySeq (es) (foldl (lambda (e1 e2) (CSeq e2 (desugar e1))) (desugar (first es)) (rest es))]
     [PyNum (n) (CNum n)]
     [PyStr (s) (CStr s)]
     [PyVoid () (CVoid)]
