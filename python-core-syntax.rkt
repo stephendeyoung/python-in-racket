@@ -11,6 +11,8 @@ ParselTongue.
   [CNum (n : number)]
   [CStr (s : string)]
   [CTrue]
+  [CFalse]
+  [CVoid]
   [CSeq (e1 : CExp) (e2 : CExp)]
   [CError (e1 : CExp)]
   [CIf (test : CExp) (then : CExp) (else : CExp)]
@@ -19,12 +21,16 @@ ParselTongue.
   [CApp (fun : CExp) (args : (listof CExp))]
   [CFunc (args : (listof symbol)) (body : CExp)]
   [CPrim1 (prim : symbol) (arg : CExp)]
-  [CPrimP (l : CExp) (op : symbol) (r : CExp)])
+  [CPrimP (l : CExp) (op : symbol) (r : CExp)]
+  [CBLEH])
 
 (define-type CVal
   [VNum (n : number)]
   [VStr (s : string)]
   [VTrue]
+  [VFalse]
+  [VVoid]
+  [VException (exn : CExp)]
   [VClosure (env : Env) (args : (listof symbol)) (body : CExp)])
 
 (define-type-alias Env (hashof symbol CVal))

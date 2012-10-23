@@ -1,3 +1,1 @@
-print(5);
-print(3.3);
-type(3);
+___assertTrue(3 + 3 == 5 + 1)

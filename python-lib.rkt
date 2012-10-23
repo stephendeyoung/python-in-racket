@@ -40,14 +40,13 @@ that calls the primitive `print`.
 
 ))
 
-(define (python-lib expr)
-  (local [(define (python-lib/recur libs)
-            (cond [(empty? libs) expr]
+(define python-lib
+  (local [(define (python-lib/recur libs bindings)
+            (cond [(empty? libs) bindings]
                   [(cons? libs)
                    (type-case LibBinding (first libs)
                      (bind (name value)
-                           (CLet name value
-                                 (python-lib/recur (rest libs)))))]))]
-    (python-lib/recur lib-functions)))
+                           (python-lib/recur (rest libs) (hash-set bindings name value))))]))]
+    (python-lib/recur lib-functions (hash empty))))
 
 

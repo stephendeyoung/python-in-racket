@@ -1,7 +1,8 @@
 #lang plai-typed
 
 (require "python-core-syntax.rkt"
-         "python-primitives.rkt")
+         "python-primitives.rkt"
+         "python-lib.rkt")
 
 (define (interp-env expr env)
   (type-case CExp expr
@@ -17,7 +18,9 @@
 
     [CId (x) (type-case (optionof CVal) (hash-ref env x)
       [some (v) v]
-      [none () (error 'interp "Unbound identifier")])]
+      [none () (type-case (optionof CExp) (hash-ref python-lib x)
+                 [some (v) (interp-env v env)]
+                 [none () (error 'interp "Unbound identifier")])])]
 
     [CLet (x bind body)
       (interp-env body (hash-set env x (interp-env bind env)))]
@@ -35,6 +38,29 @@
     [CFunc (args body) (VClosure env args body)] 
 
     [CPrim1 (prim arg) (python-prim1 prim (interp-env arg env))]
+    
+    [CPrimP (l o r)
+     (type-case CVal (interp-env l env)
+       [VNum (l-n) (type-case CVal (interp-env r env)
+                     [VNum (r-n) (case o
+                                   [(+) (VNum (+ l-n r-n))]
+                                   [(==) (if (= l-n r-n)
+                                             (VTrue)
+                                             (VFalse))])]
+                     [else (case o
+                             [(+) (error 'interp "TypeError: unsupported operand type(s)")]
+                             [(==) (VFalse)])])]
+       [VStr (l-s) (type-case CVal (interp-env r env)
+                     [VStr (r-s) (case o
+                                   [(+) (VStr (string-append l-s r-s))]
+                                   [(==) (if (string=? l-s r-s)
+                                             (VTrue)
+                                             (VFalse))])]
+                     [else (case o
+                             [(+) (error 'interp "TypeError: unsupported operand type(s)")]
+                             [(==) (VFalse)])])]
+       [else (error 'interp "TypeError: unsupported operand type(s)")])]
+              
     [else (error 'interp "no case yet")]))
 
 (define (bind-args args vals env)
@@ -47,4 +73,5 @@
 
 (define (interp expr)
   (interp-env expr (hash (list))))
+
 

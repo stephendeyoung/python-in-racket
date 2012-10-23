@@ -19,6 +19,9 @@ primitives here.
     [VNum (n) (to-string n)]
     [VStr (s) s]
     [VTrue () "true"]
+    [VFalse () "false"]
+    [VVoid () ""]
+    [VException (e) (error 'type (CStr-s (CError-e1 e)))]
     [VClosure (env args body) (error 'prim "Can't print closures yet")]))
   
 
