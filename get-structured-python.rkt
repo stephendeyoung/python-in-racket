@@ -25,7 +25,7 @@ structure that you define in python-syntax.rkt
      (PyCond (get-structured-python test-expr)
              (PySeq (map get-structured-python then))
              (if (empty? els)
-                 (PyVoid)
+                 (PyNone)
                  (PySeq (map get-structured-python els))))]
     [(hash-table ('nodetype "Compare")
                  ('ops ops-list)
@@ -41,6 +41,11 @@ structure that you define in python-syntax.rkt
      (PyPrimP (get-structured-python left-expr)
               (get-structured-python operation)
               (get-structured-python right-expr))]
+    [(hash-table ('nodetype "UnaryOp")
+                 ('op operation)
+                 ('operand val))
+     (PyUnaryOp (get-structured-python operation)
+               (get-structured-python val))]
     [(hash-table ('nodetype "BoolOp")
                  ('op ops-list)
                  ('values values-list))
@@ -48,10 +53,30 @@ structure that you define in python-syntax.rkt
                (map get-structured-python values-list))]
     [(hash-table ('nodetype "Add"))
      '+]
+    [(hash-table ('nodetype "Mult"))
+     '*]
     [(hash-table ('nodetype "Eq"))
      '==]
+    [(hash-table ('nodetype "Lt"))
+     '<]
+    [(hash-table ('nodetype "LtE"))
+     '<=]
+    [(hash-table ('nodetype "Gt"))
+     '>]
+    [(hash-table ('nodetype "GtE"))
+     '>=]
+    [(hash-table ('nodetype "NotEq"))
+     '!=]
     [(hash-table ('nodetype "Or"))
      'or]
+    [(hash-table ('nodetype "And"))
+     'and]
+    [(hash-table ('nodetype "Not"))
+     'not]
+    [(hash-table ('nodetype "Is"))
+     'is]
+    [(hash-table ('nodetype "USub"))
+     'neg]
     [(hash-table ('nodetype "Call")
                  ('keywords keywords) ;; ignoring keywords for now
                  ('kwargs kwargs)     ;; ignoring kwargs for now
@@ -60,6 +85,12 @@ structure that you define in python-syntax.rkt
                  ('func func-expr))
      (PyApp (get-structured-python func-expr)
             (map get-structured-python args-list))]
+    ;[(hash-table ('nodetype "Attribute")
+     ;            ('ctx _)
+      ;           ('attr attr)
+       ;          ('value val))
+     ;(PyApp (string->symbol attr)
+      ;      (map get-structured-python val))]
     [(hash-table ('nodetype "Name")
                  ('ctx _)        ;; ignoring ctx for now
                  ('id id))
@@ -74,6 +105,48 @@ structure that you define in python-syntax.rkt
                  ('cause _)
                  ('exc exception))
      (PyRaise (get-structured-python exception))]
+    [(hash-table ('nodetype "List")
+                 ('ctx _)
+                 ('elts elements))
+     (PyList (map get-structured-python elements))]
+    [(hash-table ('nodetype "Pass"))
+     (PyNone)]
+    [(hash-table ('nodetype "Assign")
+                 ('value val)
+                 ('targets id))
+    (PySet! (first (map get-structured-python id))
+            (get-structured-python val))]
+    [(hash-table ('nodetype "Lambda")
+                 ('args args)
+                 ('body body))
+     (PyFunc (get-structured-python args)
+             (get-structured-python body))]
+    [(hash-table ('nodetype "FunctionDef")
+                 ('name name)
+                 ('args args)
+                 ('body body)
+                 ('decorator_list _)
+                 ('returns _))
+     (PySet! (PyId (string->symbol name))
+             (PyFunc (get-structured-python args)
+                     (PySeq (map get-structured-python body))))]
+    [(hash-table ('nodetype "arguments")
+                 ('args args)
+                 ('defaults _)
+                 ('kwargannotation _)
+                 ('vararg _)
+                 ('kwarg _)
+                 ('varargannotation _)
+                 ('kw_defaults _)
+                 ('kwonlyargs _))
+     (map get-structured-python args)]
+    [(hash-table ('nodetype "arg")
+                 ('arg arg)
+                 ('annotation _))
+     (string->symbol arg)]
+    [(hash-table ('nodetype "Return")
+                 ('value val))
+     (get-structured-python val)]
                  
-    [_ (error 'parse (printf pyjson))]))
+    [a (error 'parse "Haven't handled a case yet: '~a'" a)]))
 

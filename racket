@@ -1,0 +1,1 @@
+python-reference/scope/lambda1.py python-main.rkt --python-path /usr/local/bin/python3 --interp
