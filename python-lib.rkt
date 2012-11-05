@@ -20,13 +20,13 @@ that calls the primitive `print`.
 
 (define assert-true-lambda
   (CFunc (list 'check-true)
-    (CIf (CId 'check-true) (CTrue) (CPrim1 'print (list (CError (list (CStr "Assert failed"))))))))
+    (CIf (CId 'check-true) (CTrue) (CPrim1 'print (list (CError (CStr "Assert failed")))))))
 
 (define assert-equal-lambda
   (CFunc (list 'check-equal1 'check-equal2)
          (CIf (CPrimP (CId 'check-equal1) '== (CId 'check-equal2))
               (CTrue)
-              (CPrim1 'print (list (CError (list (CStr "Assert failed"))))))))
+              (CPrim1 'print (list (CError (CStr "Assert failed")))))))
 
 ;(define assert-raises-lambda
  ; (CFunc (list 'check-raises 'error-func)
@@ -45,11 +45,15 @@ that calls the primitive `print`.
          (CIf (CPrimP (CPrim1 'type (list (CId 'check-length))) '== (CStr "list"))
               (CPrim1 'len (list (CId 'check-length)))
               (CPrim1 'print
-                      (list (CError (list (CPrimP (CStr "object of type ") '+ (CPrimP (CPrim1 'type (list (CId 'check-length))) '+ (CStr " has no len()"))))))))))
+                      (list (CError (CPrimP (CStr "object of type ") '+ (CPrimP (CPrim1 'type (list (CId 'check-length))) '+ (CStr " has no len()")))))))))
 
 (define pop-lambda
   (CFunc (list 'lst 'index)
          (CPrim1 'pop (list (CId 'lst) (CId 'index)))))
+
+(define raise-exception
+  (CFunc (list 'err-msg)
+         (CError (CId 'err-msg))))
 
 (define-type LibBinding
   [bind (left : symbol) (right : CExp)])
@@ -63,6 +67,7 @@ that calls the primitive `print`.
         (bind 'type type-lambda)
         (bind 'len get-length)
         (bind 'pop pop-lambda)
+        (bind 'Exception raise-exception)
 
 ))
 

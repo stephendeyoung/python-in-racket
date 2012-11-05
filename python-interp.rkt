@@ -7,7 +7,8 @@
 (require (typed-in racket/base (string<? : (string string -> boolean)))
          (typed-in racket/base (string<=? : (string string -> boolean)))
          (typed-in racket/base (string>=? : (string string -> boolean)))
-         (typed-in racket/base (string>? : (string string -> boolean))))
+         (typed-in racket/base (string>? : (string string -> boolean)))
+         (typed-in racket/base (string->list : (string -> (listof string)))))
 
 (define new-loc
   (let ([n (box 0)])
@@ -23,10 +24,9 @@
     [CTrue () (ValueA (VTrue) store)]
     [CFalse () (ValueA (VFalse) store)]
 
-    [CError (e) (ValueA (VException (map (lambda (e-v)
-                                           (type-case CAnswer (interp-env e-v env store)
-                                             [ValueA (e-v s-v) e-v])) e)) store)]
-    
+    [CError (e) (type-case CAnswer (interp-env e env store)
+                                      [ValueA (e-v s-v) (ValueA (VException e-v) s-v)])]
+                                      
     [CNone () (ValueA (VNone) store)]
 
     [CIf (i t e) (type-case CAnswer (interp-env i env store)
@@ -42,12 +42,12 @@
     [CId (x) (type-case (optionof Loc) (hash-ref env x)
       [some (v) (type-case (optionof CVal) (hash-ref store v)
                   [some (v) (ValueA v store)]
-                  [none () (error 'interp (string-append "No value in store for this location: " (to-string v)))])]
+                  [none () (ValueA (VException (VStr (string-append "No value in store for this location: " (to-string v)))) store)])]
       [none () (type-case (optionof CExp) (hash-ref python-lib x)
                  [some (v) (type-case CAnswer (interp-env v env store)
                              [ValueA (v-v s-v)
                                      (ValueA v-v s-v)])]
-                 [none () (ValueA (VException (list (VStr (string-append "Unbound identifier: " (to-string x))))) store)])])]
+                 [none () (ValueA (VException (VStr (string-append "Unbound identifier: " (to-string x)))) store)])])]
 
     [CLet (x bind body)
           (type-case CAnswer (interp-env bind env store)
@@ -89,7 +89,7 @@
                                                   [ValueA (e-v e-s)
                                                           e-v])) arges))]
                      (bind-args (VClosure-args fun-v) argvs (VClosure-env fun-v) fun-s (VClosure-body fun-v)))
-                   (error 'interp (string-append "Not a closure: " (to-string fun-v))))])]
+                   (ValueA (VException (VStr (string-append "Not a closure: " (to-string fun-v)))) fun-s))])]
 
     [CFunc (args body) (ValueA (VClosure env args body) store)] 
 
@@ -134,7 +134,7 @@
                                                         [(==) (ValueA (VFalse) r-s)]
                                                         [(is) (ValueA (VFalse) r-s)]
                                                         [(!=) (ValueA (VTrue) r-s)]
-                                                        [else (error 'interp "Unsupported operand")])])])]
+                                                        [else (ValueA (VException (VStr "Unsupported operand")) r-s)])])])]
                         [VStr (l-str) (type-case CAnswer (interp-env r env l-s)
                                         [ValueA (r-v r-s)
                                                 (type-case CVal r-v
@@ -160,50 +160,60 @@
                                                                             (ValueA (VFalse) r-s))]
                                                                   [(!=) (if (string=? l-str r-str)
                                                                             (ValueA (VFalse) r-s)
-                                                                            (ValueA (VTrue) r-s))])]    
+                                                                            (ValueA (VTrue) r-s))]
+                                                                  [(in) (let ([chars (string->list r-str)])
+                                                                          (if (member l-str chars)
+                                                                              (ValueA (VTrue) r-s)
+                                                                              (begin (display (to-string l-str))
+                                                                                     (display (to-string chars))
+                                                                                     (ValueA (VFalse) r-s))))]
+                                                                  [(not-in) (let ([chars (string->list r-str)])
+                                                                          (if (member l-str chars)
+                                                                              (ValueA (VFalse) r-s)
+                                                                              (ValueA (VTrue) r-s)))])]
                                                   [else (case o
                                                           [(==) (ValueA (VFalse) r-s)]
                                                           [(is) (ValueA (VFalse) r-s)]
-                                                          [else (error 'interp "TypeError: unsupported operand type(s)")])])])]
+                                                          [else (ValueA (VStr "TypeError: unsupported operand type(s)") r-s)])])])]
                         [VTrue () (type-case CAnswer (interp-env r env l-s)
                                       [ValueA (r-v r-s)
                                               (type-case CVal r-v
                                                 [VTrue () (case o
                                                                [(==) (ValueA (VTrue) r-s)]
                                                                [(is) (ValueA (VTrue) r-s)]
-                                                               [else (error 'interp "Unsupported operand")])]
+                                                               [else (ValueA (VException (VStr "Unsupported operand")) r-s)])]
                                                 [else (case o
                                                           [(==) (ValueA (VFalse) r-s)]
                                                           [(is) (ValueA (VFalse) r-s)]
-                                                          [else (error 'interp "TypeError: unsupported operand type(s)")])])])]
+                                                          [else (ValueA (VException (VStr "TypeError: unsupported operand type(s)")) r-s)])])])]
                         [VFalse () (type-case CAnswer (interp-env r env l-s)
                                       [ValueA (r-v r-s)
                                               (type-case CVal r-v
                                                 [VFalse () (case o
                                                                [(==) (ValueA (VTrue) r-s)]
                                                                [(is) (ValueA (VTrue) r-s)]
-                                                               [else (error 'interp "Unsupported operand")])]
+                                                               [else (ValueA (VException (VStr "Unsupported operand")) r-s)])]
                                                 [else (case o
                                                           [(==) (ValueA (VFalse) r-s)]
                                                           [(is) (ValueA (VFalse) r-s)]
-                                                          [else (error 'interp "TypeError: unsupported operand type(s)")])])])]
+                                                          [else (ValueA (VException (VStr "TypeError: unsupported operand type(s)")) r-s)])])])]
                         [VNone () (type-case CAnswer (interp-env r env l-s)
                                       [ValueA (r-v r-s)
                                               (type-case CVal r-v
                                                 [VNone () (case o
                                                                [(==) (ValueA (VTrue) r-s)]
                                                                [(is) (ValueA (VTrue) r-s)]
-                                                               [else (error 'interp "Unsupported operand")])]
+                                                               [else (ValueA (VException (VStr "Unsupported operand")) r-s)])]
                                                 [else (case o
                                                           [(==) (ValueA (VFalse) r-s)]
                                                           [(is) (ValueA (VFalse) r-s)]
-                                                          [else (error 'interp "TypeError: unsupported operand type(s)")])])])]
+                                                          [else (ValueA (VException (VStr "TypeError: unsupported operand type(s)")) r-s)])])])]
                         ;[VException (e) (type-case CAnswer (interp-env r env l-s)
                          ;                 [ValueA (r-v r-s)
                           ;                        (type-case CVal r-v
                            ;                         [VException (r-e)
                             ;                                    (if (not (equal? e r-e))
-                        [else (error 'interp "TypeError: unsupported operand type(s)")])])]
+                        [else (ValueA (VException (VStr "TypeError: unsupported operand type(s)")) l-s)])])]
               
     [else (error 'interp (string-append "no case yet: " (to-string expr)))]))
 
@@ -212,7 +222,7 @@
                                              [ValueA (expr-v expr-s)
                                                      (ValueA expr-v expr-s)])]
         [(or (empty? args) (empty? vals))
-         (error 'interp "Arity mismatch")]
+         (ValueA (VException (VStr "Arity mismatch")) store)]
         [(and (cons? args) (cons? vals))
          (let ([loc (new-loc)])
            (bind-args (rest args) 
@@ -222,6 +232,10 @@
                       expr))]))
 
 (define (interp expr)
-  (interp-env expr (hash (list)) (hash (list))))
+  (type-case CAnswer (interp-env expr (hash (list)) (hash (list)))
+    [ValueA (arg-v arg-s) 
+            (type-case CVal arg-v
+              [VException (e) (error 'interp (VStr-s e))] ; might need to change this so Exception is an Answer
+              [else (void)])]))
 
 

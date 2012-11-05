@@ -27,9 +27,7 @@ primitives here.
               [VTuple (l) (to-string l)]
               [VRange (l) (to-string l)]
               [VDict (d) (to-string d)]
-              [VException (e) (error 'type (to-string (map (lambda (e)
-                                                             (pretty (ValueA e (hash (list)))))
-                                                           e)))]
+              [VException (e) "exception"]
               [VClosure (env args body) (error 'prim "Can't print closures yet")]
               [else "no pretty print for this type yet"])]))
   

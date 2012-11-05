@@ -14,7 +14,7 @@
     [PyPrimP (l o r) (CPrimP (desugar l) o (desugar r))]
     [PyBoolOp (o e)
               (case o ; TODO: Use cleaner methods such as first/rest
-                [(or) (local ([define dummy-fun (CFunc (list) (CPrim1 'print (list (CError (list (CStr "Dummy function"))))))])
+                [(or) (local ([define dummy-fun (CFunc (list) (CPrim1 'print (list (CError (CStr "Dummy function")))))])
                         (CLet 'or-func dummy-fun
                               (CLet 'or-func2
                                     (CFunc (list 'el 'ln 'num)
@@ -28,7 +28,7 @@
                                           (CApp (CId 'or-func) (list (desugar (first e))
                                                                      (CPrimP (CPrim1 'len (list (CList (map desugar e)))) '- (CNum 1))
                                                                      (CNum 0)))))))]
-                [(and) (local ([define dummy-fun (CFunc (list) (CPrim1 'print (list (CError (list (CStr "Dummy function"))))))])
+                [(and) (local ([define dummy-fun (CFunc (list) (CPrim1 'print (list (CError (CStr "Dummy function")))))])
                          (CLet 'and-var dummy-fun
                                (CLet 'and-func
                                      (CFunc (list 'el 'ln 'num)
@@ -51,7 +51,7 @@
                  [(neg) (CPrimP (desugar v) '* (CNum -1))])]                                              
                                  
     [PyCond (c t e) (CIf (CPrim1 'True (list (desugar c))) (desugar t) (desugar e))]
-    [PyRaise (e) (CError (list (desugar e)))]
+    [PyRaise (e) (CError (desugar e))]
     [PyList (l) (CList (map desugar l))]
     [PySet! (i v) (CSet! (PyId-x i) (desugar v))]
     [PyFunc (a b) (CFunc a (desugar b))]
@@ -62,9 +62,9 @@
       seq 
       (type-case PyExpr (first exprs)
         [PySet! (i v) (CIf (lookup (PyId-x i) sym)
-                           (CLet (PyId-x i) (CError (list (CPrimP (CStr "Unbound identifier: ")
+                           (CLet (PyId-x i) (CError (CPrimP (CStr "Unbound identifier: ")
                                                                   '+
-                                                                  (CStr (to-string (PyId-x i))))))
+                                                                  (CStr (to-string (PyId-x i)))))
                                  (get-vars (rest exprs) (cons (PyId-x i) sym) seq))
                            (get-vars (rest exprs) sym seq))]
         [else (if (empty? (rest exprs))

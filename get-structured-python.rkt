@@ -77,6 +77,10 @@ structure that you define in python-syntax.rkt
      'is]
     [(hash-table ('nodetype "USub"))
      'neg]
+    [(hash-table ('nodetype "In"))
+     'in]
+    [(hash-table ('nodetype "NotIn"))
+     'not-in]
     [(hash-table ('nodetype "Call")
                  ('keywords keywords) ;; ignoring keywords for now
                  ('kwargs kwargs)     ;; ignoring kwargs for now

@@ -17,7 +17,7 @@ ParselTongue.
   [CNone]
   [CSeq (e1 : CExp) (e2 : CExp)]
   [CSet! (x : symbol) (val : CExp)]
-  [CError (err : (listof CExp))]
+  [CError (err : CExp)]
   [CList (lst : (listof CExp))] ; change to vectors
   [CTuple (lst : (listof CExp))]
   [CRange (seq : (listof CExp))]
@@ -41,7 +41,7 @@ ParselTongue.
   [VTrue]
   [VFalse]
   [VNone]
-  [VException (exn : (listof CVal))]
+  [VException (exn : CVal)]
   [VList (lst : (listof CVal))]
   [VTuple (lst : (listof CVal))]
   [VRange (lst : (listof CVal))]
